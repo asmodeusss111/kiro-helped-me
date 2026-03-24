@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://generativelanguage.googleapis.com https://cdn.jsdelivr.net; frame-src 'self' blob: data:; img-src 'self' data: blob:;">
+<title>DevAI Studio</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#0d0d0d;--bg1:#141414;--bg2:#1a1a1a;--bg3:#222;--bg4:#2a2a2a;
+  --border:#2e2e2e;--border2:#3a3a3a;
+  --green:#3ddc84;--green2:#2ab56d;--green3:#1a7a4a;
+  --gdim:rgba(61,220,132,0.08);--gdim2:rgba(61,220,132,0.14);
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --red:#e06c75;--yellow:#e5c07b;--blue:#61afef;--purple:#c678dd;--orange:#d19a66;
+  --font-code:'JetBrains Mono',monospace;--font-ui:'Inter',sans-serif;
+}
+html,body{height:100%;background:var(--bg0);color:var(--text);font-family:var(--font-ui);overflow:hidden}
+
+/* TITLEBAR */
+.titlebar{height:32px;background:var(--bg0);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:12px;user-select:none;flex-shrink:0}
+.tl-logo{display:flex;align-items:center;gap:7px;font-family:var(--font-code);font-size:12px;font-weight:600;color:var(--green)}
+.tl-logo-icon{width:18px;height:18px;background:var(--green3);border:1px solid var(--green2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--green);font-weight:700}
+.tl-menu{display:flex;gap:2px}
+.tl-menu-item{font-size:12px;color:var(--text2);padding:2px 8px;border-radius:4px;cursor:pointer;transition:.15s}
+.tl-menu-item:hover{background:var(--bg3);color:var(--text)}
+.tl-path{flex:1;text-align:center;font-size:11px;color:var(--text3);font-family:var(--font-code)}
+.tl-actions{display:flex;gap:8px;align-items:center}
+.btn-run{height:22px;padding:0 12px;background:var(--green3);border:1px solid var(--green2);color:var(--green);font-size:11px;font-family:var(--font-code);border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:.15s}
+.btn-run:hover{background:var(--green2);color:#000}
+.btn-icon{width:22px;height:22px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:12px;transition:.15s}
+.btn-icon:hover{color:var(--green);border-color:var(--green3)}
+
+/* APP */
+.app{display:flex;height:calc(100vh - 32px);overflow:hidden}
+
+/* ACTIVITY BAR */
+.activity-bar{width:44px;background:var(--bg0);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;flex-shrink:0}
+.act-btn{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);transition:.15s;position:relative;border:none;background:transparent}
+.act-btn:hover{color:var(--text2);background:var(--bg3)}
+.act-btn.active{color:var(--green);background:var(--gdim)}
+.act-btn.active::before{content:'';position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:2px;height:18px;background:var(--green);border-radius:0 2px 2px 0}
+.act-spacer{flex:1}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:width .2s}
+.sidebar.collapsed{width:0}
+.sidebar-header{padding:10px 12px 6px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;white-space:nowrap}
+.sidebar-hbtns{display:flex;gap:6px}
+.sidebar-hbtn{color:var(--text3);font-size:13px;cursor:pointer;transition:.15s;background:none;border:none;padding:2px;border-radius:3px}
+.sidebar-hbtn:hover{color:var(--green)}
+.file-tree{flex:1;overflow-y:auto;padding:2px 0;min-width:220px}
+.file-tree::-webkit-scrollbar{width:4px}
+.file-tree::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.folder-item{padding:3px 12px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer;transition:.1s;white-space:nowrap}
+.folder-item:hover{background:var(--bg3);color:var(--text)}
+.file-item{padding:3px 12px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer;transition:.1s;font-family:var(--font-code);white-space:nowrap;position:relative}
+.file-item:hover{background:var(--bg3);color:var(--text)}
+.file-item.active{background:var(--bg4);color:var(--text)}
+.file-item:hover .file-del{opacity:1}
+.file-del{opacity:0;margin-left:auto;font-size:11px;color:var(--text3);padding:1px 4px;border-radius:3px;transition:.15s;cursor:pointer}
+.file-del:hover{color:var(--red);background:rgba(224,108,117,.12)}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.d-html{background:#e06c75}.d-css{background:#61afef}.d-js{background:#e5c07b}.d-json{background:#d19a66}.d-other{background:#888}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* TABS */
+.tabs{height:35px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:flex-end;overflow-x:auto;flex-shrink:0}
+.tabs::-webkit-scrollbar{height:0}
+.tab{height:33px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);cursor:pointer;border-right:1px solid var(--border);border-top:1px solid transparent;white-space:nowrap;transition:.15s;font-family:var(--font-code);flex-shrink:0;position:relative}
+.tab:hover{color:var(--text2);background:var(--bg2)}
+.tab.active{background:var(--bg2);color:var(--text);border-top-color:var(--green)}
+.tab-close{width:14px;height:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:0;transition:.15s;cursor:pointer}
+.tab:hover .tab-close,.tab.active .tab-close{opacity:.6}
+.tab-close:hover{opacity:1!important;background:var(--bg4)}
+.tab-modified{width:7px;height:7px;border-radius:50%;background:var(--yellow);flex-shrink:0}
+
+/* EDITOR AREA */
+.editor-area{flex:1;display:flex;overflow:hidden;position:relative}
+.code-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);position:relative}
+
+/* CODEMIRROR OVERRIDES */
+.CodeMirror{height:100%!important;background:var(--bg2)!important;color:var(--text)!important;font-family:var(--font-code)!important;font-size:13px!important;line-height:1.7!important}
+.CodeMirror-gutters{background:var(--bg2)!important;border-right:1px solid var(--border)!important}
+.CodeMirror-linenumber{color:var(--text3)!important}
+.CodeMirror-cursor{border-left:2px solid var(--green)!important}
+.CodeMirror-selected{background:rgba(61,220,132,0.12)!important}
+.CodeMirror-activeline-background{background:rgba(255,255,255,0.025)!important}
+.CodeMirror-scrollbar-filler{background:var(--bg2)!important}
+.CodeMirror ::-webkit-scrollbar{width:6px;height:6px}
+.CodeMirror ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* PREVIEW */
+.preview-pane{flex:1;overflow:hidden;background:#fff;display:none}
+.preview-pane iframe{width:100%;height:100%;border:none}
+.preview-pane.active{display:flex;flex-direction:column}
+.preview-toolbar{height:32px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0}
+.preview-url{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;height:22px;padding:0 8px;font-size:11px;color:var(--text2);font-family:var(--font-code);display:flex;align-items:center}
+.preview-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;height:22px;padding:0 8px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--font-code);transition:.15s}
+.preview-btn:hover{color:var(--green);border-color:var(--green3)}
+
+/* VIEW TOGGLE */
+.view-toggle{position:absolute;top:8px;right:8px;display:flex;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;overflow:hidden;z-index:10}
+.view-btn{padding:4px 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:.15s;font-family:var(--font-code);background:none;border:none}
+.view-btn.active{background:var(--bg0);color:var(--green)}
+.view-btn:hover:not(.active){color:var(--text2)}
+
+/* SPLIT VIEW */
+.split-pane{display:flex;width:100%}
+.split-pane .code-pane{width:50%}
+.split-pane .preview-pane{display:flex!important;width:50%;border-left:1px solid var(--border)}
+
+/* RESIZER */
+.resizer{width:4px;background:transparent;cursor:col-resize;transition:.2s;flex-shrink:0}
+.resizer:hover,.resizer.dragging{background:var(--green3)}
+
+/* AI PANEL */
+.ai-panel{width:300px;background:var(--bg1);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:width .2s}
+.ai-panel.collapsed{width:0}
+.ai-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;min-width:300px}
+.ai-header-icon{width:22px;height:22px;background:var(--green3);border:1px solid var(--green2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--green);font-family:var(--font-code);font-weight:600}
+.ai-header-text{font-size:12px;font-weight:500;color:var(--text2)}
+.ai-badge{margin-left:auto;font-size:10px;color:var(--green);background:var(--gdim);border:1px solid var(--green3);padding:2px 7px;border-radius:10px;font-family:var(--font-code)}
+.ai-badge.offline{color:var(--text3);background:var(--bg3);border-color:var(--border2)}
+.ai-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:300px}
+.ai-messages::-webkit-scrollbar{width:4px}
+.ai-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+.msg.user .msg-label{color:var(--text3)}
+.msg.ai .msg-label{color:var(--green2)}
+.msg-bubble{padding:8px 11px;border-radius:6px;font-size:12px;line-height:1.6;word-break:break-word}
+.msg.user .msg-bubble{background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:6px 6px 6px 2px}
+.msg.ai .msg-bubble{background:var(--gdim);color:var(--text);border:1px solid var(--green3);border-radius:6px 6px 2px 6px}
+.msg-code{background:var(--bg0);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-family:var(--font-code);font-size:11px;color:var(--green);line-height:1.5;margin-top:6px;overflow-x:auto;white-space:pre;max-height:180px;overflow-y:auto}
+.msg-code::-webkit-scrollbar{width:3px;height:3px}
+.msg-code::-webkit-scrollbar-thumb{background:var(--border2)}
+.msg-apply{margin-top:6px;padding:5px 10px;background:var(--green3);border:1px solid var(--green2);border-radius:5px;color:var(--green);font-size:11px;font-family:var(--font-code);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:5px}
+.msg-apply:hover{background:var(--green2);color:#000}
+.typing-indicator{display:flex;align-items:center;gap:4px;padding:8px 11px;background:var(--gdim);border:1px solid var(--green3);border-radius:6px 6px 2px 6px;width:fit-content}
+.td{width:5px;height:5px;background:var(--green);border-radius:50%;animation:blink 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}
+.td:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.ai-input-area{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;min-width:300px}
+.ai-ctx{font-size:10px;color:var(--text3);font-family:var(--font-code);margin-bottom:5px;padding:3px 7px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;gap:5px}
+.ai-ctx-dot{width:5px;height:5px;border-radius:50%;background:var(--blue)}
+.ai-input-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;display:flex;align-items:flex-end;gap:6px;padding:7px 10px;transition:.15s}
+.ai-input-wrap:focus-within{border-color:var(--green3)}
+.ai-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:12px;font-family:var(--font-ui);resize:none;line-height:1.5;max-height:100px}
+.ai-input::placeholder{color:var(--text3)}
+.ai-send{width:26px;height:26px;background:var(--green3);border:1px solid var(--green2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--green);font-size:13px;transition:.15s;flex-shrink:0}
+.ai-send:hover{background:var(--green2);color:#000}
+.ai-send.disabled{opacity:.4;pointer-events:none}
+
+/* TERMINAL */
+.terminal{height:170px;background:var(--bg0);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:height .2s}
+.terminal.collapsed{height:30px}
+.term-tabs{height:30px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:16px;flex-shrink:0}
+.term-tab{font-size:11px;color:var(--text3);cursor:pointer;padding:2px 0;border-bottom:1px solid transparent;transition:.15s;display:flex;align-items:center;gap:5px}
+.term-tab.active{color:var(--text2);border-bottom-color:var(--green)}
+.term-tab:hover{color:var(--text2)}
+.term-tab-close{margin-left:auto;font-size:11px;color:var(--text3);cursor:pointer;padding:0 6px}
+.term-tab-close:hover{color:var(--green)}
+.term-body{flex:1;padding:6px 14px;font-family:var(--font-code);font-size:12px;line-height:1.7;overflow-y:auto;color:var(--text2)}
+.term-body::-webkit-scrollbar{width:4px}
+.term-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.tl{display:flex;gap:8px}
+.tp{color:var(--green)}
+.tc2{color:var(--text)}
+.ts{color:var(--green)}
+.te{color:var(--red)}
+.ti{color:var(--blue)}
+.ty2{color:var(--yellow)}
+.term-cursor{display:inline-block;width:7px;height:13px;background:var(--green);vertical-align:text-bottom;animation:blink-cur 1s infinite}
+@keyframes blink-cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* STATUS BAR */
+.statusbar{height:22px;background:var(--green3);border-top:1px solid var(--green2);display:flex;align-items:center;padding:0 10px;gap:14px;font-size:11px;color:var(--green);font-family:var(--font-code);user-select:none;flex-shrink:0}
+.status-left{display:flex;gap:14px;align-items:center}
+.status-right{margin-left:auto;display:flex;gap:14px;align-items:center}
+.status-item{display:flex;align-items:center;gap:4px;opacity:.8;cursor:pointer;transition:.15s}
+.status-item:hover{opacity:1}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.status-dot.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(61,220,132,.4)}50%{box-shadow:0 0 0 4px rgba(61,220,132,0)}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:28px;width:420px;max-width:90vw;position:relative}
+.modal-top{height:2px;background:linear-gradient(90deg,transparent,var(--green2),var(--green),var(--green2),transparent);margin:-28px -28px 24px;border-radius:12px 12px 0 0}
+.modal-title{font-size:15px;font-weight:600;font-family:var(--font-code);color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+.modal-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;font-family:var(--font-code);margin-bottom:6px;display:block}
+.modal-input{width:100%;height:38px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:0 12px;font-family:var(--font-code);outline:none;transition:.15s;margin-bottom:16px}
+.modal-input:focus{border-color:var(--green3);box-shadow:0 0 0 3px rgba(61,220,132,.07)}
+.modal-input::placeholder{color:var(--text3)}
+.modal-btn{width:100%;height:40px;background:var(--green3);border:1px solid var(--green2);border-radius:7px;color:var(--green);font-size:13px;font-weight:600;font-family:var(--font-code);cursor:pointer;transition:.2s}
+.modal-btn:hover{background:var(--green2);color:#0a1a10}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;transition:.15s}
+.modal-close:hover{color:var(--text)}
+.modal-hint{font-size:11px;color:var(--text3);margin-top:12px;line-height:1.5}
+.modal-hint a{color:var(--green);text-decoration:none}
+.modal-hint a:hover{text-decoration:underline}
+
+/* NEW FILE POPUP */
+.new-file-popup{position:absolute;left:8px;right:8px;top:32px;background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px;z-index:100;display:none}
+.new-file-popup.open{display:block}
+.new-file-input{width:100%;height:30px;background:var(--bg2);border:1px solid var(--green3);border-radius:4px;color:var(--text);font-size:12px;padding:0 8px;font-family:var(--font-code);outline:none}
+
+/* CONTEXT MENU */
+.ctx-menu{position:fixed;background:var(--bg1);border:1px solid var(--border2);border-radius:6px;padding:4px;z-index:500;min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none}
+.ctx-menu.open{display:block}
+.ctx-item{padding:6px 10px;font-size:12px;color:var(--text2);cursor:pointer;border-radius:4px;display:flex;align-items:center;gap:8px;transition:.1s}
+.ctx-item:hover{background:var(--bg3);color:var(--text)}
+.ctx-item.danger:hover{color:var(--red);background:rgba(224,108,117,.1)}
+.ctx-sep{height:1px;background:var(--border);margin:4px 0}
+
+/* NOTIFICATIONS */
+.notif{position:fixed;bottom:36px;right:16px;background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text);z-index:999;display:flex;align-items:center;gap:8px;transform:translateY(20px);opacity:0;transition:.3s;max-width:280px}
+.notif.show{transform:translateY(0);opacity:1}
+.notif-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.notif.success .notif-dot{background:var(--green)}
+.notif.error .notif-dot{background:var(--red)}
+.notif.info .notif-dot{background:var(--blue)}
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-top"></div>
+    <button class="modal-close" onclick="closeApiModal()">×</button>
+    <div class="modal-title">⚡ Gemini API Key</div>
+    <div class="modal-sub">Введи свой бесплатный API ключ от Google Gemini для активации AI-ассистента.</div>
+    <label class="modal-label">API Key</label>
+    <input class="modal-input" id="apiKeyInput" type="password" placeholder="AIza...">
+    <button class="modal-btn" onclick="saveApiKey()">Сохранить и активировать</button>
+    <div class="modal-hint">Получить бесплатный ключ: <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer">aistudio.google.com</a> → Get API Key</div>
+  </div>
+</div>
+
+<!-- NEW FILE MODAL -->
+<div class="modal-overlay" id="newFileModal">
+  <div class="modal" style="width:340px">
+    <div class="modal-top"></div>
+    <button class="modal-close" onclick="document.getElementById('newFileModal').classList.remove('open')">×</button>
+    <div class="modal-title">Новый файл</div>
+    <div class="modal-sub">Введи имя файла с расширением (например: about.html)</div>
+    <label class="modal-label">Имя файла</label>
+    <input class="modal-input" id="newFileName" placeholder="index.html" onkeydown="if(event.key==='Enter')createNewFile(event)">
+    <button class="modal-btn" onclick="createNewFile(event)">Создать файл</button>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="ctxRename()">✏️ Переименовать</div>
+  <div class="ctx-item" onclick="ctxDuplicate()">📋 Дублировать</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()">🗑 Удалить</div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<!-- TITLEBAR -->
+<div class="titlebar">
+  <div class="tl-logo">
+    <div class="tl-logo-icon" style="cursor:pointer" onclick="saveAndGoToDashboard()" title="Дашборд">D</div>
+    DevAI Studio
+  </div>
+  <div class="tl-menu">
+    <div class="tl-menu-item" onclick="menuFile()">File</div>
+    <div class="tl-menu-item" onclick="menuEdit()">Edit</div>
+    <div class="tl-menu-item" onclick="toggleTerminal()">Terminal</div>
+    <div class="tl-menu-item" onclick="openApiModal()">Settings</div>
+  </div>
+  <div class="tl-path" id="tlPath">my-project / index.html</div>
+  <div class="tl-actions">
+    <button class="btn-run" onclick="runPreview()">▶ Run</button>
+    <div class="btn-icon" onclick="exportProject()" title="Скачать проект (ZIP)">⬇</div>
+    <div class="btn-icon" onclick="openApiModal()" title="Настройки API">⚙</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- ACTIVITY BAR -->
+  <div class="activity-bar">
+    <button class="act-btn active" id="actExplorer" title="Файлы" onclick="toggleSidebar('explorer')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3z"/><path d="M9 3v18M3 9h6M3 15h6"/></svg>
+    </button>
+    <button class="act-btn" id="actSearch" title="Поиск" onclick="toggleSidebar('search')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="act-btn" id="actAI" title="AI Chat" onclick="toggleAIPanel()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <div class="act-spacer"></div>
+    <button class="act-btn" title="API Key" onclick="openApiModal()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      Explorer
+      <div class="sidebar-hbtns">
+        <button class="sidebar-hbtn" title="Новый файл" onclick="openNewFileModal()">+</button>
+        <button class="sidebar-hbtn" title="Обновить" onclick="renderFileTree()">↻</button>
+      </div>
+    </div>
+    <div class="file-tree" id="fileTree"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TABS -->
+    <div class="tabs" id="tabs"></div>
+
+    <!-- EDITOR AREA -->
+    <div class="editor-area" id="editorArea">
+      <div class="code-pane" id="codePaneWrapper">
+        <textarea id="cmEditor"></textarea>
+        <div class="view-toggle">
+          <button class="view-btn active" onclick="setView('code')">Code</button>
+          <button class="view-btn" onclick="setView('preview')">Preview</button>
+          <button class="view-btn" onclick="setView('split')">Split</button>
+        </div>
+      </div>
+
+      <div class="resizer" id="resizer"></div>
+
+      <div class="preview-pane" id="previewPane">
+        <div class="preview-toolbar">
+          <div class="preview-url" id="previewUrl">● localhost:3000</div>
+          <button class="preview-btn" onclick="refreshPreview()">↻ Refresh</button>
+          <button class="preview-btn" onclick="setView('code')">✕</button>
+        </div>
+        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+
+      <div class="resizer" id="resizerAI"></div>
+
+      <!-- AI PANEL -->
+      <div class="ai-panel" id="aiPanel">
+        <div class="ai-header">
+          <div class="ai-header-icon">AI</div>
+          <div class="ai-header-text">Gemini Assistant</div>
+          <div class="ai-badge" id="aiBadge">● online</div>
+        </div>
+        <div class="ai-messages" id="aiMessages"></div>
+        <div class="ai-input-area">
+          <div class="ai-ctx" id="aiCtx">
+            <div class="ai-ctx-dot"></div>
+            <span id="aiCtxFile">index.html</span>
+          </div>
+          <div class="ai-input-wrap">
+            <textarea class="ai-input" id="aiInput" placeholder="Спроси или дай задание Gemini..." rows="1"
+              onkeydown="handleAIKeydown(event)"></textarea>
+            <div class="ai-send" id="aiSendBtn" onclick="sendAIMessage()">↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="terminal" id="terminal">
+      <div class="term-tabs">
+        <div class="term-tab active">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Terminal
+        </div>
+        <div class="term-tab" onclick="termClear()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.93"/></svg>
+          Clear
+        </div>
+        <div class="term-tab-close" onclick="toggleTerminal()">⌃</div>
+      </div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="statusbar">
+      <div class="status-left">
+        <div class="status-item"><div class="status-dot pulse"></div><span id="statusBranch">main</span></div>
+        <div class="status-item" id="statusErrors">✓ 0 errors</div>
+      </div>
+      <div class="status-right">
+        <div class="status-item" id="statusLang">HTML</div>
+        <div class="status-item" id="statusCursor">Ln 1, Col 1</div>
+        <div class="status-item">Spaces: 2</div>
+        <div class="status-item">UTF-8</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CODEMIRROR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/jump-to-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+<!-- JSZip for export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<script>
+// ==================== STATE ====================
+const state = {
+  project: null, // Holds {id, name, files, ...}
+  files: {},     // Holds { content, lang, modified }
+  currentFile: null,
+  openTabs: [],
+  view: 'code', // code | preview | split
+  sidebarOpen: true,
+  aiPanelOpen: true,
+  terminalOpen: true,
+  ctxTarget: null,
+  aiHistory: [],
+  aiTyping: false,
+};
+
+let editor = null;
+
+// ==================== HELPERS ====================
+function getLang(filename) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  const map = { html:'htmlmixed', htm:'htmlmixed', css:'css', js:'javascript', json:'javascript', md:'markdown', txt:'text/plain' };
+  return map[ext] || 'text/plain';
+}
+
+function getDotClass(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const map = { html:'d-html', css:'d-css', js:'d-js', json:'d-json' };
+  return map[ext] || 'd-other';
+}
+
+function getLangLabel(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const map = { html:'HTML', css:'CSS', js:'JavaScript', json:'JSON', md:'Markdown', txt:'Text' };
+  return map[ext] || ext.toUpperCase();
+}
+
+function escapeHtml(str) {
+  if (typeof str !== 'string') str = String(str);
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ==================== NOTIFICATIONS ====================
+let _notifTimer = null;
+function notify(msg, type='success') {
+  if (_notifTimer) { clearTimeout(_notifTimer); }
+  const el = document.getElementById('notif');
+  el.className = `notif ${type} show`;
+  el.innerHTML = `<div class="notif-dot"></div><span>${escapeHtml(msg)}</span>`;
+  _notifTimer = setTimeout(() => { el.classList.remove('show'); }, 3000);
+}
+
+// ==================== TERMINAL ====================
+function termLine(html) {
+  const body = document.getElementById('termBody');
+  body.insertAdjacentHTML('beforeend', `<div class="tl">${html}</div>`);
+  body.scrollTop = body.scrollHeight;
+}
+function termLog(cmd, type='') {
+  const body = document.getElementById('termBody');
+  body.querySelector('.term-cursor')?.parentElement.remove();
+  termLine(`<span class="${type || 'tc2'}">${escapeHtml(cmd)}</span>`);
+  termLine(`<span class="tp">~/my-project $</span> <span class="term-cursor"></span>`);
+}
+function termClear() {
+  document.getElementById('termBody').innerHTML = '';
+  termLog('', '');
+}
+function toggleTerminal() {
+  state.terminalOpen = !state.terminalOpen;
+  document.getElementById('terminal').style.height = state.terminalOpen ? '170px' : '30px';
+}
+
+// ==================== FILE & PROJECT MANAGEMENT ====================
+function updateProjectInStorage() {
+    if (!state.project || !state.project.id) return;
+
+    try {
+        const allProjectsRaw = localStorage.getItem('devai_projects');
+        const allProjects = allProjectsRaw ? JSON.parse(allProjectsRaw) : [];
+        if (!Array.isArray(allProjects)) return;
+        
+        const projectIndex = allProjects.findIndex(p => p.id === state.project.id);
+        if (projectIndex === -1) {
+             // If project not in list (e.g., a default or new unsaved project), add it
+             const newProjectRecord = {
+                ...state.project,
+                files: {},
+                updatedAt: Date.now()
+             };
+             for (const filename in state.files) {
+                newProjectRecord.files[filename] = state.files[filename].content;
+             }
+             allProjects.unshift(newProjectRecord);
+        } else {
+            // Update existing project
+            const updatedFiles = {};
+            for (const filename in state.files) {
+                updatedFiles[filename] = state.files[filename].content;
+            }
+            allProjects[projectIndex].files = updatedFiles;
+            allProjects[projectIndex].updatedAt = Date.now();
+        }
+        
+        localStorage.setItem('devai_projects', JSON.stringify(allProjects));
+        
+        Object.values(state.files).forEach(f => { f.modified = false; });
+        renderTabs();
+
+    } catch (e) {
+        console.error("Failed to save project back to storage:", e);
+        notify('Ошибка: не удалось сохранить проект.', 'error');
+    }
+}
+
+function saveCurrentFile() {
+  if (!editor || !state.files[state.currentFile]) return notify('Нет активного файла', 'error');
+  state.files[state.currentFile].content = editor.getValue();
+  updateProjectInStorage();
+  termLog(`Saved ${state.currentFile}`, 'ts');
+  notify(`✓ Сохранено: ${state.currentFile}`);
+}
+
+function openFile(name) {
+  if (!state.files[name]) return;
+  if (editor && state.files[state.currentFile]) {
+    state.files[state.currentFile].content = editor.getValue();
+  }
+  state.currentFile = name;
+  if (!state.openTabs.includes(name)) state.openTabs.push(name);
+
+  const file = state.files[name];
+  editor.setValue(file.content);
+  editor.setOption('mode', file.lang || getLang(name));
+  editor.clearHistory();
+  editor.focus();
+
+  renderFileTree();
+  renderTabs();
+  document.getElementById('tlPath').textContent = `${state.project.name || 'project'} / ${name}`;
+  document.getElementById('statusLang').textContent = getLangLabel(name);
+  document.getElementById('aiCtxFile').textContent = name;
+  termLog(`cat ${name}`, 'tp');
+}
+
+function closeTab(name) {
+  const idx = state.openTabs.indexOf(name);
+  if (idx === -1) return;
+  state.openTabs.splice(idx, 1);
+  if (state.currentFile === name) {
+    const nextFile = state.openTabs[Math.max(0, idx - 1)] || Object.keys(state.files)[0];
+    if (nextFile) {
+        openFile(nextFile);
+    } else {
+        editor.setValue('');
+        state.currentFile = null;
+    }
+  }
+  renderTabs();
+}
+
+function openNewFileModal() {
+  document.getElementById('newFileModal').classList.add('open');
+  setTimeout(() => document.getElementById('newFileName').focus(), 100);
+}
+
+function createNewFile(event) {
+  if (event) event.preventDefault();
+  const name = document.getElementById('newFileName').value.trim();
+  if (!name) return notify('Введи имя файла', 'error');
+
+  const SAFE_NAME = /^[\w\-. ]+$/;
+  if (!SAFE_NAME.test(name) || name.includes('..') || name.startsWith('.') || name.length > 100) {
+      return notify('Недопустимое имя файла', 'error');
+  }
+  if (state.files[name]) return notify('Файл уже существует', 'error');
+
+  const ext = name.split('.').pop();
+  const defaults = { html: '<!DOCTYPE html>\n<html>\n<body>\n\n</body>\n</html>', css:'/* styles */', js:'// code' };
+  state.files[name] = { content: defaults[ext] || '', lang: getLang(name), modified: true };
+  
+  document.getElementById('newFileName').value = '';
+  document.getElementById('newFileModal').classList.remove('open');
+  
+  renderFileTree();
+  openFile(name);
+  saveCurrentFile(); // Persist the new file immediately
+  termLog(`touch ${name}`, 'tp');
+  notify(`✓ Создан: ${name}`);
+}
+
+function deleteFile(name, e) {
+  if (e) e.stopPropagation();
+  if (Object.keys(state.files).length <= 1) return notify('Нельзя удалить последний файл', 'error');
+  if (!confirm(`Удалить ${name}?`)) return;
+  
+  delete state.files[name];
+  state.openTabs = state.openTabs.filter(t => t !== name);
+  
+  if (state.currentFile === name) {
+    const nextFile = state.openTabs[0] || Object.keys(state.files)[0];
+    openFile(nextFile);
+  }
+  
+  updateProjectInStorage();
+  renderFileTree();
+  renderTabs();
+  termLog(`rm ${name}`, 'te');
+  notify(`Удалён: ${name}`, 'info');
+}
+
+function renderFileTree() {
+  const tree = document.getElementById('fileTree');
+  tree.innerHTML = `<div class="folder-item"><span>▾</span><span> 📁 ${state.project.name || 'project'}</span></div>`;
+  Object.keys(state.files).sort().forEach(name => {
+    const item = document.createElement('div');
+    item.className = 'file-item' + (name === state.currentFile ? ' active' : '');
+    item.style.paddingLeft = '24px';
+    item.dataset.file = name;
+    item.innerHTML = `<div class="fdot ${getDotClass(name)}"></div><span>${escapeHtml(name)}</span><span class="file-del" data-delete-file="${name}">×</span>`;
+    item.onclick = (e) => !e.target.dataset.deleteFile && openFile(name);
+    item.querySelector('.file-del').onclick = (e) => deleteFile(name, e);
+    item.oncontextmenu = e => openCtxMenu(e, name);
+    tree.appendChild(item);
+  });
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  state.openTabs.forEach(name => {
+    const file = state.files[name];
+    if (!file) return;
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (name === state.currentFile ? ' active' : '');
+    tab.innerHTML = `${file.modified ? '<div class="tab-modified"></div>' : ''}<div class="fdot ${getDotClass(name)}"></div><span>${escapeHtml(name)}</span><div class="tab-close">×</div>`;
+    tab.onclick = () => openFile(name);
+    tab.querySelector('.tab-close').onclick = (e) => { e.stopPropagation(); closeTab(name); };
+    tabs.appendChild(tab);
+  });
+}
+
+// ==================== PREVIEW & VIEW ====================
+function buildPreviewHTML() {
+  if (editor) state.files[state.currentFile].content = editor.getValue();
+  let html = state.files['index.html']?.content || '';
+  let styleBlock = Object.entries(state.files).filter(([f]) => f.endsWith('.css')).map(([f, data]) => `<style>/* ${f} */\n${data.content}\n</style>`).join('\n');
+  let scriptBlock = Object.entries(state.files).filter(([f]) => f.endsWith('.js')).map(([f, data]) => `<script>/* ${f} */\n${data.content}\n<\/script>`).join('\n');
+  
+  html = html.replace(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi, '').replace('</head>', `${styleBlock}</head>`);
+  html = html.replace(/<script[^>]+src=["'][^"']*\.js["'][^>]*><\/script>/gi, '').replace('</body>', `${scriptBlock}</body>`);
+  return html;
+}
+
+function runPreview() {
+  document.getElementById('previewFrame').srcdoc = buildPreviewHTML();
+  if (state.view === 'code') setView('split');
+  termLog('npm run dev', 'tp');
+  setTimeout(() => termLog('✓ Preview updated', 'ts'), 300);
+  notify('▶ Preview обновлён');
+}
+
+function refreshPreview() {
+  document.getElementById('previewFrame').srcdoc = buildPreviewHTML();
+  notify('↻ Обновлено');
+}
+
+function setView(v) {
+  state.view = v;
+  const editorArea = document.getElementById('editorArea');
+  editorArea.className = 'editor-area'; // reset
+  if (v === 'split') editorArea.classList.add('split-pane');
+
+  document.getElementById('codePaneWrapper').style.display = (v === 'preview') ? 'none' : 'flex';
+  document.getElementById('previewPane').style.display = (v === 'code') ? 'none' : 'flex';
+  
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  if (v === 'code') document.querySelector('.view-btn:nth-child(1)').classList.add('active');
+  if (v === 'preview') document.querySelector('.view-btn:nth-child(2)').classList.add('active');
+  if (v === 'split') document.querySelector('.view-btn:nth-child(3)').classList.add('active');
+
+  if (v !== 'code') refreshPreview();
+  setTimeout(() => editor.refresh(), 50);
+}
+
+// ==================== UI & PANELS ====================
+function toggleSidebar() {
+  state.sidebarOpen = !state.sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed', !state.sidebarOpen);
+  document.getElementById('actExplorer').classList.toggle('active', state.sidebarOpen);
+  setTimeout(() => editor.refresh(), 250);
+}
+
+function toggleAIPanel() {
+  state.aiPanelOpen = !state.aiPanelOpen;
+  document.getElementById('aiPanel').classList.toggle('collapsed', !state.aiPanelOpen);
+  document.getElementById('resizerAI').style.display = state.aiPanelOpen ? '' : 'none';
+  document.getElementById('actAI').classList.toggle('active', state.aiPanelOpen);
+  setTimeout(() => editor.refresh(), 250);
+}
+
+function saveAndGoToDashboard() {
+    saveCurrentFile();
+    window.location.href = 'index.html';
+}
+
+// ... (Other functions like context menu, API key, AI Chat remain largely the same)
+// Minor changes to AI Chat
+function applyCode(code, filename) {
+  if (!state.files[filename]) {
+    state.files[filename] = { content: code, lang: getLang(filename), modified: true };
+    if (!state.openTabs.includes(filename)) state.openTabs.push(filename);
+    renderFileTree();
+  } else {
+    state.files[filename].content = code;
+    state.files[filename].modified = true;
+  }
+  openFile(filename);
+  saveCurrentFile(); // Save immediately after applying
+  notify(`✓ AI-код применён к ${filename}`);
+  termLog(`AI applied changes to ${filename}`, 'ts');
+}
+
+async function sendAIMessage() {
+  const input = document.getElementById('aiInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  
+  const apiKey = localStorage.getItem('gemini_api_key');
+  if (!apiKey) {
+    notify('Сначала введи Gemini API ключ в Settings', 'error');
+    openApiModal();
+    return;
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+  addAIMessage('user', msg);
+  
+  // Show typing indicator
+  const container = document.getElementById('aiMessages');
+  const typing = document.createElement('div');
+  typing.className = 'typing-indicator';
+  typing.innerHTML = '<div class="td"></div><div class="td"></div><div class="td"></div>';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const context = `Ты AI-ассистент в веб-редакторе. Текущий файл: ${state.currentFile}. Помогай писать HTML, CSS, JS код. Если генеришь код, оборачивай в тройные бэктики с указанием языка.`;
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: context + '\n\nПользователь: ' + msg }] }]
+      })
+    });
+
+    typing.remove();
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API error');
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа';
+    
+    // Parse code blocks
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const blocks = [];
+    let match;
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      blocks.push({ lang: match[1] || 'text', code: match[2].trim(), file: state.currentFile });
+    }
+    
+    const cleanText = text.replace(codeBlockRegex, '').trim();
+    addAIMessage('ai', cleanText || 'Вот код:', blocks.length > 0 ? blocks : null);
+    
+  } catch (err) {
+    typing.remove();
+    addAIMessage('ai', `Ошибка: ${err.message}. Проверь API ключ в Settings.`);
+    notify('Ошибка AI: ' + err.message, 'error');
+  }
+}
+
+function handleAIKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); } }
+
+// ... (Rest of the functions: export, menu handlers, shortcuts, init)
+// ==================== CONTEXT MENU ====================
+function openCtxMenu(e, name) {
+  e.preventDefault();
+  state.ctxTarget = name;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.display = 'block';
+  const { innerWidth, innerHeight } = window;
+  const { offsetWidth, offsetHeight } = menu;
+  menu.style.left = `${Math.min(e.clientX, innerWidth - offsetWidth - 8)}px`;
+  menu.style.top = `${Math.min(e.clientY, innerHeight - offsetHeight - 8)}px`;
+  menu.classList.add('open');
+}
+
+function closeCtxMenu() { document.getElementById('ctxMenu').classList.remove('open'); }
+function ctxRename() {
+  closeCtxMenu();
+  const oldName = state.ctxTarget;
+  const newName = prompt('Новое имя:', oldName);
+  if (!newName || newName === oldName) return;
+
+  const SAFE_NAME = /^[\w\-. ]+$/;
+  if (!SAFE_NAME.test(newName) || newName.includes('..') || newName.startsWith('.') || newName.length > 100 || state.files[newName]) {
+    return notify('Недопустимое или уже существующее имя файла', 'error');
+  }
+
+  state.files[newName] = state.files[oldName];
+  delete state.files[oldName];
+  
+  state.openTabs = state.openTabs.map(t => t === oldName ? newName : t);
+  if (state.currentFile === oldName) state.currentFile = newName;
+  
+  updateProjectInStorage();
+  renderFileTree();
+  renderTabs();
+  notify(`Переименован: ${newName}`);
+}
+
+function ctxDuplicate() {
+  closeCtxMenu();
+  const oldName = state.ctxTarget;
+  const ext = oldName.includes('.') ? '.' + oldName.split('.').pop() : '';
+  const base = oldName.replace(ext, '');
+  let newName = `${base}_copy${ext}`;
+  let i = 2;
+  while(state.files[newName]) { newName = `${base}_copy${i++}${ext}`; }
+  
+  state.files[newName] = { ...state.files[oldName], content: state.files[oldName].content, modified: true };
+  updateProjectInStorage();
+  renderFileTree();
+  notify(`Дублирован: ${newName}`);
+}
+
+function ctxDelete() { closeCtxMenu(); deleteFile(state.ctxTarget, null); }
+
+// ==================== API KEY ====================
+function openApiModal() { document.getElementById('apiModal').classList.add('open'); }
+function closeApiModal() { document.getElementById('apiModal').classList.remove('open'); }
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!/^AIza[0-9A-Za-z\-_]{35,}$/.test(key)) {
+    return notify('Неверный формат ключа. Должен начинаться с AIza...', 'error');
+  }
+  localStorage.setItem('gemini_api_key', key);
+  closeApiModal();
+  updateAIBadge();
+  termLog('Gemini API connected', 'ts');
+  notify('✓ API ключ сохранён');
+  addAIMessage('ai', 'Отлично! API ключ подключён. Теперь я могу помочь тебе создавать сайты. 🚀');
+}
+function updateAIBadge() {
+  const badge = document.getElementById('aiBadge');
+  if (localStorage.getItem('gemini_api_key')) {
+    badge.textContent = '● online'; badge.className = 'ai-badge';
+  } else {
+    badge.textContent = '○ no key'; badge.className = 'ai-badge offline';
+  }
+}
+
+// ==================== EXPORT ====================
+async function exportProject() {
+  if (!window.JSZip) return notify('JSZip не загружен', 'error');
+  saveCurrentFile(); // Ensure latest content is in state
+  const zip = new JSZip();
+  const folder = zip.folder(state.project.name || 'project');
+  Object.entries(state.files).forEach(([name, file]) => {
+    folder.file(name, file.content || '');
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  saveAs(blob, `${state.project.name || 'project'}.zip`);
+  termLog(`Exported ${state.project.name}.zip`, 'ts');
+  notify('✓ Проект скачан как ZIP');
+}
+// ==================== MENU & SHORTCUTS ====================
+function menuFile() {
+  const choice = prompt('File:\n1. Новый файл\n2. Загрузить файл с компьютера\n3. Сохранить (Ctrl+S)\n4. Экспорт ZIP\n\nВведи номер:');
+  if (choice === '1') openNewFileModal();
+  else if (choice === '2') uploadFileFromComputer();
+  else if (choice === '3') saveCurrentFile();
+  else if (choice === '4') exportProject();
+}
+
+function uploadFileFromComputer() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.html,.css,.js,.json,.txt,.md';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+      const name = file.name;
+      const SAFE_NAME = /^[\w\-. ]+$/;
+      if (!SAFE_NAME.test(name) || name.includes('..') || name.startsWith('.') || name.length > 100) {
+        return notify('Недопустимое имя файла', 'error');
+      }
+      
+      if (state.files[name]) {
+        if (!confirm(`Файл ${name} уже существует. Заменить?`)) return;
+      }
+      
+      state.files[name] = { content: reader.result, lang: getLang(name), modified: true };
+      renderFileTree();
+      openFile(name);
+      saveCurrentFile();
+      notify(`✓ Загружен: ${name}`);
+      termLog(`Uploaded ${name} from computer`, 'ts');
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+function menuEdit() { notify('Используй Ctrl+Z / Ctrl+Y в редакторе', 'info'); }
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 's') { e.preventDefault(); saveCurrentFile(); }
+    if (e.key === 'n') { e.preventDefault(); openNewFileModal(); }
+    if (e.key === 'b') { e.preventDefault(); toggleSidebar(); }
+    if (e.key === '`') { e.preventDefault(); toggleTerminal(); }
+  }
+  if (e.key === 'Escape') { closeCtxMenu(); }
+});
+document.addEventListener('click', e => { if (!e.target.closest('.ctx-menu')) closeCtxMenu(); });
+document.getElementById('aiInput').addEventListener('input', function() {
+  this.style.height = 'auto'; this.style.height = `${Math.min(this.scrollHeight, 100)}px`;
+});
+
+
+// ==================== INIT ====================
+function loadDefaultProject() {
+    state.project = {
+        id: 'default_project',
+        name: 'my-site',
+        files: { 'index.html': '', 'style.css': '', 'main.js': '' },
+    };
+    state.files = {
+        'index.html': { content: '<h1>Welcome</h1>\n<p>Create a project or start coding.</p>', lang: 'htmlmixed', modified: false },
+        'style.css': { content: 'body { font-family: sans-serif; }', lang: 'css', modified: false },
+        'main.js': { content: 'console.log("hello world");', lang: 'javascript', modified: false },
+    };
+    state.openTabs = ['index.html'];
+    state.currentFile = 'index.html';
+    document.getElementById('tlPath').textContent = `my-site / index.html`;
+    termLine(`<span class="ti">  Загружен проект по умолчанию.</span>`);
+}
+
+function init() {
+  editor = CodeMirror.fromTextArea(document.getElementById('cmEditor'), {
+    mode: 'htmlmixed', theme: 'material-darker', lineNumbers: true, autoCloseBrackets: true, matchBrackets: true,
+    autoCloseTags: true, styleActiveLine: true, indentUnit: 2, tabSize: 2,
+    extraKeys: { 'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment', 'Ctrl-F': 'findPersistent' }
+  });
+  editor.on('cursorActivity', () => {
+    const {line, ch} = editor.getCursor();
+    document.getElementById('statusCursor').textContent = `Ln ${line+1}, Col ${ch+1}`;
+  });
+  editor.on('change', () => {
+    if (state.files[state.currentFile]) {
+      state.files[state.currentFile].modified = true;
+      renderTabs();
+    }
+  });
+
+  const activeProjectRaw = localStorage.getItem('devai_active_project');
+  if (activeProjectRaw) {
+    try {
+      const proj = JSON.parse(activeProjectRaw);
+      if (proj && proj.files && typeof proj.files === 'object' && proj.id) {
+        state.project = proj;
+        state.files = {};
+        const SAFE_NAME = /^[\w\-. ]+$/;
+        Object.entries(proj.files).forEach(([name, content]) => {
+          if (SAFE_NAME.test(name) && name.length <= 100 && typeof content === 'string') {
+            state.files[name] = { content, lang: getLang(name), modified: false };
+          }
+        });
+        if (Object.keys(state.files).length > 0) {
+          state.currentFile = Object.keys(state.files)[0];
+          state.openTabs = [state.currentFile];
+          termLine(`<span class="ti">  Открыт проект: ${proj.name || 'project'}</span>`);
+        } else { loadDefaultProject(); }
+      } else { loadDefaultProject(); }
+    } catch(e) { console.error(e); loadDefaultProject(); }
+  } else { loadDefaultProject(); }
+  
+  if (state.currentFile) openFile(state.currentFile);
+  renderFileTree();
+  termLine(`<span class="ti">  DevAI Studio v1.1.0 — Gemini AI Edition</span>`);
+  termLog('Ready.');
+  updateAIBadge();
+
+  if (localStorage.getItem('gemini_api_key')) {
+    addAIMessage('ai', 'Привет! Я Gemini, твой AI ассистент. Чем могу помочь?');
+  } else {
+    addAIMessage('ai', 'Привет! Для активации AI-помощника нужен Gemini API ключ. Нажми Settings и введи его.');
+  }
+
+  try {
+    const userRaw = localStorage.getItem('devai_user');
+    if(userRaw) document.getElementById('statusBranch').textContent = `👤 ${JSON.parse(userRaw).name}`;
+  } catch(e) {}
+}
+
+window.addEventListener('load', init);
+// Adding the missing AI message functions for completeness
+function addAIMessage(role, content, codeBlocks) {
+  const container = document.getElementById('aiMessages');
+  const msg = document.createElement('div');
+  msg.className = `msg ${role}`;
+  msg.innerHTML = `<div class="msg-label">${role === 'ai' ? 'Gemini' : 'Ты'}</div><div class="msg-bubble"></div>`;
+  msg.querySelector('.msg-bubble').textContent = content; // Safe
+  
+  if (codeBlocks) {
+    codeBlocks.forEach(block => {
+      const codeWrapper = document.createElement('div');
+      codeWrapper.innerHTML = `<div class="msg-code"></div><button class="msg-apply">▶ Применить к ${escapeHtml(block.file || state.currentFile)}</button>`;
+      codeWrapper.querySelector('.msg-code').textContent = block.code; // Safe
+      codeWrapper.querySelector('.msg-apply').onclick = () => applyCode(block.code, block.file || state.currentFile);
+      msg.appendChild(codeWrapper);
+    });
+  }
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevAI Studio — Админка</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#0a0a0a;--bg1:#111;--bg2:#171717;--bg3:#1e1e1e;--bg4:#252525;
+  --border:#242424;--border2:#313131;
+  --green:#3ddc84;--green2:#2ab56d;--green3:#1a7a4a;
+  --gdim:rgba(61,220,132,0.07);--gdim2:rgba(61,220,132,0.13);
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --red:#e06c75;--yellow:#e5c07b;--blue:#61afef;--purple:#c678dd;
+  --font-code:'JetBrains Mono',monospace;--font-ui:'Inter',sans-serif;
+}
+html,body{height:100%;background:var(--bg0);color:var(--text);font-family:var(--font-ui)}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
+.tb-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.tb-logo-icon{width:26px;height:26px;background:var(--red);border:1px solid #c05a62;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-code);font-size:11px;font-weight:700;color:#fff}
+.tb-logo-text{font-family:var(--font-code);font-size:13px;font-weight:600;color:var(--red)}
+.tb-badge{font-size:10px;font-family:var(--font-code);background:rgba(224,108,117,.15);border:1px solid rgba(224,108,117,.3);color:var(--red);padding:2px 8px;border-radius:8px}
+.tb-spacer{flex:1}
+.tb-user{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.tb-avatar{width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:var(--font-code)}
+.tb-link{font-size:12px;color:var(--text3);text-decoration:none;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;transition:.15s;font-family:var(--font-code)}
+.tb-link:hover{color:var(--text2);border-color:var(--border2)}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 52px)}
+
+/* SIDEBAR */
+.sidebar{width:210px;background:var(--bg1);border-right:1px solid var(--border);padding:14px 0;flex-shrink:0;overflow-y:auto}
+.s-section{padding:0 10px;margin-bottom:18px}
+.s-title{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;font-family:var(--font-code);padding:0 6px;margin-bottom:6px}
+.s-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;color:var(--text2);cursor:pointer;transition:.15s;user-select:none}
+.s-item:hover{background:var(--bg3);color:var(--text)}
+.s-item.active{background:var(--bg3);color:var(--text)}
+.s-item.active .s-icon{color:var(--red)}
+.s-icon{font-size:14px;flex-shrink:0}
+.s-count{margin-left:auto;font-size:10px;background:var(--bg4);color:var(--text3);padding:1px 6px;border-radius:8px;font-family:var(--font-code)}
+.s-count.alert{background:rgba(224,108,117,.15);color:var(--red)}
+.s-divider{height:1px;background:var(--border);margin:6px 10px}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* PAGE HEADER */
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.page-title{font-size:18px;font-weight:600}
+.page-sub{font-size:12px;color:var(--text3);margin-top:3px;font-family:var(--font-code)}
+.page-actions{display:flex;gap:8px}
+
+/* BUTTONS */
+.btn{height:34px;padding:0 14px;border-radius:6px;font-size:12px;font-family:var(--font-code);cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.btn-danger{background:rgba(224,108,117,.12);border:1px solid rgba(224,108,117,.3);color:var(--red)}
+.btn-danger:hover{background:rgba(224,108,117,.2)}
+.btn-green{background:var(--green3);border:1px solid var(--green2);color:var(--green)}
+.btn-green:hover{background:var(--green2);color:#0a1a10}
+.btn-ghost{background:var(--bg2);border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{color:var(--text);background:var(--bg3)}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:16px}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sc-label{font-size:11px;color:var(--text3)}
+.sc-icon{font-size:18px}
+.sc-val{font-size:26px;font-weight:700;font-family:var(--font-code);margin-bottom:2px}
+.sc-change{font-size:11px;color:var(--text3);font-family:var(--font-code)}
+.sc-change.up{color:var(--green)}
+.sc-change.dn{color:var(--red)}
+
+/* SECTION CARD */
+.sec{background:var(--bg1);border:1px solid var(--border);border-radius:10px;margin-bottom:18px;overflow:hidden}
+.sec-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sec-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.sec-body{padding:16px 18px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;font-family:var(--font-code);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg2)}
+.td-name{color:var(--text);font-weight:500}
+.td-email{font-family:var(--font-code);font-size:11px}
+.td-date{font-family:var(--font-code);font-size:11px;color:var(--text3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--font-code);padding:2px 8px;border-radius:8px;font-weight:600}
+.badge-admin{background:rgba(224,108,117,.15);border:1px solid rgba(224,108,117,.3);color:var(--red)}
+.badge-user{background:var(--gdim);border:1px solid var(--green3);color:var(--green)}
+.badge-new{background:rgba(97,175,239,.1);border:1px solid rgba(97,175,239,.3);color:var(--blue)}
+
+/* ROW ACTIONS */
+.row-actions{display:flex;gap:6px;opacity:0;transition:.15s}
+tr:hover .row-actions{opacity:1}
+.ra-btn{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:.15s;border:1px solid var(--border2);background:var(--bg3)}
+.ra-btn:hover{border-color:var(--red);color:var(--red)}
+.ra-btn.promote:hover{border-color:var(--green3);color:var(--green)}
+
+/* ACTIVITY LOG */
+.log-item{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.log-dot.green{background:var(--green)}
+.log-dot.red{background:var(--red)}
+.log-dot.blue{background:var(--blue)}
+.log-dot.yellow{background:var(--yellow)}
+.log-text{font-size:12px;color:var(--text2);line-height:1.5}
+.log-time{font-size:10px;color:var(--text3);font-family:var(--font-code);flex-shrink:0;margin-left:auto}
+
+/* SEARCH */
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:0 10px;height:32px;width:220px}
+.search-wrap input{background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:var(--font-ui);width:100%}
+.search-wrap input::placeholder{color:var(--text3)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:26px;width:400px;max-width:90vw;position:relative}
+.modal-top{height:2px;background:linear-gradient(90deg,transparent,#c05a62,var(--red),#c05a62,transparent);margin:-26px -26px 20px;border-radius:12px 12px 0 0}
+.modal-title{font-size:15px;font-weight:600;font-family:var(--font-code);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.5}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer}
+.modal-close:hover{color:var(--text)}
+.modal-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;font-family:var(--font-code);margin-bottom:5px;display:block}
+.modal-input{width:100%;height:38px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;padding:0 12px;font-family:var(--font-ui);outline:none;transition:.15s;margin-bottom:14px}
+.modal-input:focus{border-color:var(--green3);box-shadow:0 0 0 3px rgba(61,220,132,.06)}
+
+/* NOTIF */
+.notif{position:fixed;bottom:20px;right:20px;background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;z-index:9999;display:flex;align-items:center;gap:8px;transform:translateY(16px);opacity:0;transition:.25s;max-width:280px}
+.notif.show{transform:translateY(0);opacity:1}
+.n-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.notif.ok .n-dot{background:var(--green)}
+.notif.err .n-dot{background:var(--red)}
+.notif.info .n-dot{background:var(--blue)}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.5}
+</style>
+</head>
+<body>
+
+<!-- MODAL: Создать пользователя -->
+<div class="modal-overlay" id="createUserModal">
+  <div class="modal">
+    <div class="modal-top"></div>
+    <button class="modal-close" onclick="closeModal('createUserModal')">×</button>
+    <div class="modal-title">Создать пользователя</div>
+    <div class="modal-sub">Новый аккаунт с указанной ролью</div>
+    <label class="modal-label">Имя</label>
+    <input class="modal-input" id="newUserName" placeholder="Имя" maxlength="50">
+    <label class="modal-label">Email</label>
+    <input class="modal-input" id="newUserEmail" type="email" placeholder="email@example.com" maxlength="100">
+    <label class="modal-label">Пароль</label>
+    <input class="modal-input" id="newUserPass" type="password" placeholder="Минимум 8 символов" maxlength="128">
+    <label class="modal-label">Роль</label>
+    <select class="modal-input" id="newUserRole" style="cursor:pointer">
+      <option value="user">user — обычный пользователь</option>
+      <option value="admin">admin — полный доступ</option>
+    </select>
+    <button class="btn btn-green" style="width:100%" onclick="createUser()">✓ Создать</button>
+  </div>
+</div>
+
+<!-- NOTIF -->
+<div class="notif" id="notif"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a class="tb-logo" href="dashboard.html">
+    <div class="tb-logo-icon">A</div>
+    <div class="tb-logo-text">Admin Panel</div>
+  </a>
+  <div class="tb-badge">ROOT ACCESS</div>
+  <div class="tb-spacer"></div>
+  <div class="tb-user">
+    <div class="tb-avatar" id="adminAvatar">A</div>
+    <span id="adminName">Admin</span>
+  </div>
+  <a class="tb-link" href="dashboard.html">← Дашборд</a>
+  <a class="tb-link" href="auth.html" onclick="logout()" style="color:var(--red);border-color:rgba(224,108,117,.3)">Выйти</a>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="s-section">
+      <div class="s-title">Управление</div>
+      <div class="s-item active" onclick="showSection('users')" id="nav-users">
+        <span class="s-icon">👥</span> Пользователи
+        <span class="s-count alert" id="usersCount">0</span>
+      </div>
+      <div class="s-item" onclick="showSection('projects')" id="nav-projects">
+        <span class="s-icon">📁</span> Проекты
+        <span class="s-count" id="projectsCount">0</span>
+      </div>
+      <div class="s-item" onclick="showSection('activity')" id="nav-activity">
+        <span class="s-icon">📋</span> Активность
+      </div>
+    </div>
+    <div class="s-divider"></div>
+    <div class="s-section">
+      <div class="s-title">Система</div>
+      <div class="s-item" onclick="showSection('stats')" id="nav-stats">
+        <span class="s-icon">📊</span> Статистика
+      </div>
+      <div class="s-item" onclick="showSection('settings')" id="nav-settings">
+        <span class="s-icon">⚙</span> Настройки
+      </div>
+      <div class="s-item" onclick="clearAllData()" style="color:var(--red)">
+        <span class="s-icon">🗑</span> Очистить данные
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="mainContent"></div>
+
+</div>
+
+<script>
+'use strict';
+
+// ─── ПРОВЕРКА ДОСТУПА ───────────────────────────────
+(function checkAccess() {
+  try {
+    const u = JSON.parse(localStorage.getItem('devai_user'));
+    if (!u || u.role !== 'admin') {
+      alert('Доступ запрещён. Только для администраторов.');
+      window.location.replace('auth.html');
+    }
+    document.getElementById('adminName').textContent = u.name || 'Admin';
+    document.getElementById('adminAvatar').textContent = (u.name || 'A')[0].toUpperCase();
+  } catch {
+    window.location.replace('auth.html');
+  }
+})();
+
+// ─── HELPERS ───────────────────────────────────────
+function safeJSON(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+  catch { return fallback; }
+}
+function saveJSON(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+function escH(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts), now = Date.now(), diff = now - ts;
+  if (diff < 60000)   return 'только что';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' мин назад';
+  if (diff < 86400000)return Math.floor(diff/3600000) + ' ч назад';
+  return d.toLocaleDateString('ru-RU', {day:'numeric',month:'short',year:'numeric'});
+}
+function fmtFull(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString('ru-RU');
+}
+
+// ─── NOTIFICATIONS ─────────────────────────────────
+let _nt = null;
+function notify(msg, type='ok') {
+  if (_nt) { clearTimeout(_nt); }
+  const el = document.getElementById('notif');
+  el.innerHTML = `<div class="n-dot"></div><span>${escH(msg)}</span>`;
+  el.className = `notif ${type} show`;
+  _nt = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ─── MODAL ─────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.getElementById('createUserModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal('createUserModal');
+});
+
+// ─── NAV ───────────────────────────────────────────
+let currentSection = 'users';
+function showSection(section) {
+  currentSection = section;
+  document.querySelectorAll('.s-item').forEach(el => el.classList.remove('active'));
+  const nav = document.getElementById('nav-' + section);
+  if (nav) nav.classList.add('active');
+  renderSection();
+}
+
+// ─── RENDER ROUTER ─────────────────────────────────
+function renderSection() {
+  const main = document.getElementById('mainContent');
+  if      (currentSection === 'users')    renderUsers(main);
+  else if (currentSection === 'projects') renderProjects(main);
+  else if (currentSection === 'activity') renderActivity(main);
+  else if (currentSection === 'stats')    renderStats(main);
+  else if (currentSection === 'settings') renderSettings(main);
+}
+
+// ─── РАЗДЕЛ: ПОЛЬЗОВАТЕЛИ ──────────────────────────
+function renderUsers(main) {
+  const users    = safeJSON('devai_users', []);
+  const projects = safeJSON('devai_projects', []);
+
+  main.innerHTML = `
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">👥 Пользователи</div>
+        <div class="page-sub">${users.length} зарегистрировано</div>
+      </div>
+      <div class="page-actions">
+        <div class="search-wrap">
+          <span style="color:var(--text3);font-size:12px">🔍</span>
+          <input id="userSearch" placeholder="Поиск по имени / email..." oninput="filterUsersTable()">
+        </div>
+        <button class="btn btn-green" onclick="openModal('createUserModal')">+ Создать</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-header">
+        <div class="sec-title">
+          <span style="color:var(--red)">●</span> Все аккаунты
+        </div>
+        <button class="btn btn-ghost" onclick="exportUsers()" style="height:28px;font-size:11px">⬇ Экспорт CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Имя</th>
+              <th>Email</th>
+              <th>Роль</th>
+              <th>Проектов</th>
+              <th>Регистрация</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  renderUsersBody(users, projects);
+}
+
+function renderUsersBody(users, projects) {
+  const tbody = document.getElementById('usersBody');
+  if (!tbody) return;
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">👤</div>Нет зарегистрированных пользователей</div></td></tr>`;
+    return;
+  }
+  const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
+  const filtered = search
+    ? users.filter(u => (u.name||'').toLowerCase().includes(search) || (u.email||'').toLowerCase().includes(search))
+    : users;
+
+  tbody.innerHTML = filtered.map((u, i) => {
+    const pCount = projects.filter(p => p.ownerEmail === u.email).length;
+    const isNew  = u.createdAt && (Date.now() - u.createdAt) < 86400000;
+    return `
+      <tr>
+        <td style="color:var(--text3);font-family:var(--font-code)">${i + 1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--green3);border:1px solid var(--green2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--green);font-family:var(--font-code);flex-shrink:0">${escH((u.name||'?')[0].toUpperCase())}</div>
+            <span class="td-name">${escH(u.name || '—')}</span>
+            ${isNew ? '<span class="badge badge-new">new</span>' : ''}
+          </div>
+        </td>
+        <td class="td-email">${escH(u.email || '—')}</td>
+        <td>
+          <span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">
+            ${u.role === 'admin' ? '★ admin' : 'user'}
+          </span>
+        </td>
+        <td style="font-family:var(--font-code);color:var(--text)">${pCount}</td>
+        <td class="td-date" title="${fmtFull(u.createdAt)}">${fmtDate(u.createdAt)}</td>
+        <td>
+          <div class="row-actions">
+            ${u.role !== 'admin'
+              ? `<div class="ra-btn promote" title="Сделать админом" onclick="promoteUser('${escH(u.email)}')">★</div>`
+              : `<div class="ra-btn" title="Снять права" onclick="demoteUser('${escH(u.email)}')">☆</div>`
+            }
+            <div class="ra-btn" title="Удалить" onclick="deleteUser('${escH(u.email)}')">🗑</div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterUsersTable() {
+  const users    = safeJSON('devai_users', []);
+  const projects = safeJSON('devai_projects', []);
+  renderUsersBody(users, projects);
+}
+
+// ─── УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ─────────────────────
+async function createUser() {
+  const name  = document.getElementById('newUserName').value.trim();
+  const email = document.getElementById('newUserEmail').value.trim().toLowerCase();
+  const pass  = document.getElementById('newUserPass').value;
+  const role  = document.getElementById('newUserRole').value;
+
+  if (!name)              return notify('Введи имя', 'err');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return notify('Некорректный email', 'err');
+  if (pass.length < 8)   return notify('Пароль минимум 8 символов', 'err');
+
+  const users = safeJSON('devai_users', []);
+  if (users.find(u => u.email === email)) return notify('Email уже занят', 'err');
+
+  const buf  = new TextEncoder().encode(pass);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  const passHash = Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+  users.push({ name, email, passHash, role, createdAt: Date.now() });
+  saveJSON('devai_users', users);
+  closeModal('createUserModal');
+  document.getElementById('newUserName').value  = '';
+  document.getElementById('newUserEmail').value = '';
+  document.getElementById('newUserPass').value  = '';
+  notify(`✓ Пользователь ${name} создан (${role})`);
+  updateSidebarCounts();
+  renderSection();
+}
+
+function deleteUser(email) {
+  const me = JSON.parse(localStorage.getItem('devai_user') || '{}');
+  if (email === me.email) return notify('Нельзя удалить себя!', 'err');
+  if (!confirm(`Удалить пользователя ${email}?`)) return;
+  let users = safeJSON('devai_users', []);
+  users = users.filter(u => u.email !== email);
+  saveJSON('devai_users', users);
+  notify('Пользователь удалён', 'info');
+  updateSidebarCounts();
+  renderSection();
+}
+
+function promoteUser(email) {
+  const users = safeJSON('devai_users', []);
+  const u = users.find(u => u.email === email);
+  if (!u) return;
+  u.role = 'admin';
+  saveJSON('devai_users', users);
+  notify(`★ ${u.name} теперь admin`);
+  renderSection();
+}
+
+function demoteUser(email) {
+  const me = JSON.parse(localStorage.getItem('devai_user') || '{}');
+  if (email === me.email) return notify('Нельзя снять права с себя!', 'err');
+  const users = safeJSON('devai_users', []);
+  const u = users.find(u => u.email === email);
+  if (!u) return;
+  u.role = 'user';
+  saveJSON('devai_users', users);
+  notify(`${u.name} → user`);
+  renderSection();
+}
+
+function exportUsers() {
+  const users = safeJSON('devai_users', []);
+  const rows  = [['Имя','Email','Роль','Дата регистрации']];
+  users.forEach(u => rows.push([u.name||'', u.email||'', u.role||'user', u.createdAt ? new Date(u.createdAt).toLocaleString('ru-RU') : '—']));
+  const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'devai-users.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+  notify('✓ CSV скачан');
+}
+
+// ─── РАЗДЕЛ: ПРОЕКТЫ ───────────────────────────────
+function renderProjects(main) {
+  const projects = safeJSON('devai_projects', []);
+  main.innerHTML = `
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">📁 Проекты</div>
+        <div class="page-sub">${projects.length} всего</div>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-danger" onclick="clearProjects()">🗑 Очистить все</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header"><div class="sec-title"><span style="color:var(--blue)">●</span> Все проекты</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Название</th><th>Шаблон</th><th>Файлов</th><th>Владелец</th><th>Создан</th><th>Действие</th></tr></thead>
+          <tbody>
+            ${projects.length === 0
+              ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📁</div>Проектов нет</div></td></tr>`
+              : projects.map((p,i) => `
+                <tr>
+                  <td style="color:var(--text3);font-family:var(--font-code)">${i+1}</td>
+                  <td class="td-name">${escH(p.icon||'📁')} ${escH(p.name||'—')}</td>
+                  <td><span class="badge badge-user">${escH(p.template||'blank')}</span></td>
+                  <td style="font-family:var(--font-code)">${Object.keys(p.files||{}).length}</td>
+                  <td class="td-email">${escH(p.ownerEmail||'—')}</td>
+                  <td class="td-date">${fmtDate(p.createdAt)}</td>
+                  <td><div class="row-actions"><div class="ra-btn" title="Удалить" onclick="deleteProject('${escH(p.id)}')">🗑</div></div></td>
+                </tr>
+              `).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function deleteProject(id) {
+  if (!confirm('Удалить проект?')) return;
+  let projects = safeJSON('devai_projects', []);
+  projects = projects.filter(p => p.id !== id);
+  saveJSON('devai_projects', projects);
+  notify('Проект удалён', 'info');
+  updateSidebarCounts();
+  renderSection();
+}
+
+function clearProjects() {
+  if (!confirm('Удалить ВСЕ проекты? Это нельзя отменить.')) return;
+  saveJSON('devai_projects', []);
+  notify('Все проекты удалены', 'info');
+  updateSidebarCounts();
+  renderSection();
+}
+
+// ─── РАЗДЕЛ: АКТИВНОСТЬ ────────────────────────────
+function renderActivity(main) {
+  const log = safeJSON('devai_activity_log', []);
+  main.innerHTML = `
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">📋 Лог активности</div>
+        <div class="page-sub">${log.length} событий</div>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-ghost" onclick="clearLog()">Очистить лог</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-header"><div class="sec-title"><span style="color:var(--yellow)">●</span> События</div></div>
+      <div class="sec-body">
+        ${log.length === 0
+          ? `<div class="empty"><div class="empty-icon">📋</div>Лог пуст</div>`
+          : [...log].reverse().map(e => `
+            <div class="log-item">
+              <div class="log-dot ${e.type||'blue'}"></div>
+              <div class="log-text">${escH(e.msg)}</div>
+              <div class="log-time">${fmtDate(e.ts)}</div>
+            </div>
+          `).join('')
+        }
+      </div>
+    </div>
+  `;
+}
+
+function clearLog() {
+  saveJSON('devai_activity_log', []);
+  notify('Лог очищен', 'info');
+  renderSection();
+}
+
+// ─── РАЗДЕЛ: СТАТИСТИКА ────────────────────────────
+function renderStats(main) {
+  const users    = safeJSON('devai_users', []);
+  const projects = safeJSON('devai_projects', []);
+  const hasKey   = !!localStorage.getItem('gemini_api_key');
+  const admins   = users.filter(u => u.role === 'admin').length;
+  const today    = users.filter(u => u.createdAt && (Date.now()-u.createdAt) < 86400000).length;
+  const totalFiles = projects.reduce((s,p)=>s+Object.keys(p.files||{}).length, 0);
+
+  main.innerHTML = `
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">📊 Статистика</div>
+        <div class="page-sub">Обзор системы</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-top"><div class="sc-label">Пользователей</div><div class="sc-icon">👥</div></div>
+        <div class="sc-val">${users.length}</div>
+        <div class="sc-change up">+${today} сегодня</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top"><div class="sc-label">Проектов</div><div class="sc-icon">📁</div></div>
+        <div class="sc-val">${projects.length}</div>
+        <div class="sc-change">${totalFiles} файлов</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top"><div class="sc-label">Администраторов</div><div class="sc-icon">★</div></div>
+        <div class="sc-val" style="color:var(--red)">${admins}</div>
+        <div class="sc-change">${users.length - admins} обычных</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-top"><div class="sc-label">Gemini AI</div><div class="sc-icon">🤖</div></div>
+        <div class="sc-val" style="color:${hasKey ? 'var(--green)' : 'var(--text3)'}">${hasKey ? 'ON' : 'OFF'}</div>
+        <div class="sc-change ${hasKey ? 'up' : ''}">${hasKey ? 'API ключ задан' : 'Ключ не задан'}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+      <div class="sec">
+        <div class="sec-header"><div class="sec-title">🗄 localStorage</div></div>
+        <div class="sec-body" style="font-family:var(--font-code);font-size:12px;display:flex;flex-direction:column;gap:8px">
+          ${['devai_users','devai_projects','devai_user','gemini_api_key','devai_activity_log'].map(k => {
+            const val = localStorage.getItem(k);
+            const size = val ? new Blob([val]).size : 0;
+            return `<div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:var(--text2)">${k}</span>
+              <span style="color:${val ? 'var(--green)' : 'var(--text3)'}">${val ? (size > 1024 ? (size/1024).toFixed(1)+'kb' : size+'b') : 'null'}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-header"><div class="sec-title">📈 Топ шаблонов</div></div>
+        <div class="sec-body" style="font-family:var(--font-code);font-size:12px;display:flex;flex-direction:column;gap:8px">
+          ${(() => {
+            const counts = {};
+            projects.forEach(p => { counts[p.template||'blank'] = (counts[p.template||'blank']||0)+1; });
+            const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+            if (!sorted.length) return '<div style="color:var(--text3)">Нет проектов</div>';
+            return sorted.map(([t,c]) => `<div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">${t}</span><span style="color:var(--green)">${c}</span></div>`).join('');
+          })()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── РАЗДЕЛ: НАСТРОЙКИ ─────────────────────────────
+function renderSettings(main) {
+  const me = safeJSON('devai_user', {});
+  main.innerHTML = `
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">⚙ Настройки системы</div>
+        <div class="page-sub">Конфигурация DevAI Studio</div>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-bottom:16px">
+      <div class="sec-header"><div class="sec-title">👤 Мой аккаунт</div></div>
+      <div class="sec-body" style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;font-family:var(--font-code)">${escH((me.name||'A')[0].toUpperCase())}</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">${escH(me.name||'Admin')}</div>
+            <div style="font-size:12px;color:var(--text3);font-family:var(--font-code)">${escH(me.email||'')}</div>
+            <span class="badge badge-admin" style="margin-top:4px">★ admin</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-bottom:16px">
+      <div class="sec-header"><div class="sec-title">🔑 Gemini API</div></div>
+      <div class="sec-body">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Ключ используется для AI-ассистента в редакторе.</div>
+        <div style="display:flex;gap:8px">
+          <input id="apiKeyInput" type="password" style="flex:1;height:36px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:0 10px;font-family:var(--font-code);outline:none" placeholder="${localStorage.getItem('gemini_api_key') ? '••••••••••••••••' : 'AIza...'}">
+          <button class="btn btn-green" style="height:36px" onclick="saveApiKey()">Сохранить</button>
+          ${localStorage.getItem('gemini_api_key') ? `<button class="btn btn-danger" style="height:36px" onclick="removeApiKey()">Удалить</button>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-header"><div class="sec-title" style="color:var(--red)">⚠ Опасная зона</div></div>
+      <div class="sec-body" style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:13px;font-weight:500">Удалить всех пользователей</div><div style="font-size:11px;color:var(--text3)">Кроме текущего admin-аккаунта</div></div>
+          <button class="btn btn-danger" onclick="clearUsers()">Удалить</button>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:13px;font-weight:500">Сбросить все данные</div><div style="font-size:11px;color:var(--text3)">Удалит всё кроме текущей сессии</div></div>
+          <button class="btn btn-danger" onclick="clearAllData()">Сбросить</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput')?.value.trim();
+  if (!key) return notify('Введи ключ', 'err');
+  if (!/^AIza[0-9A-Za-z\-_]{35,}$/.test(key)) return notify('Неверный формат ключа (AIza...)', 'err');
+  localStorage.setItem('gemini_api_key', key);
+  notify('✓ API ключ сохранён');
+  renderSection();
+}
+function removeApiKey() {
+  localStorage.removeItem('gemini_api_key');
+  notify('API ключ удалён', 'info');
+  renderSection();
+}
+function clearUsers() {
+  if (!confirm('Удалить всех пользователей кроме себя?')) return;
+  const me = safeJSON('devai_user', {});
+  let users = safeJSON('devai_users', []);
+  users = users.filter(u => u.email === me.email);
+  saveJSON('devai_users', users);
+  notify('Пользователи удалены', 'info');
+  updateSidebarCounts();
+}
+function clearAllData() {
+  if (!confirm('Сбросить ВСЕ данные? Это нельзя отменить.')) return;
+  const session = localStorage.getItem('devai_user');
+  const apiKey  = localStorage.getItem('gemini_api_key');
+  localStorage.clear();
+  if (session) localStorage.setItem('devai_user', session);
+  if (apiKey)  localStorage.setItem('gemini_api_key', apiKey);
+  notify('Данные сброшены', 'info');
+  updateSidebarCounts();
+  renderSection();
+}
+
+// ─── SIDEBAR COUNTS ────────────────────────────────
+function updateSidebarCounts() {
+  const users    = safeJSON('devai_users', []);
+  const projects = safeJSON('devai_projects', []);
+  document.getElementById('usersCount').textContent   = users.length;
+  document.getElementById('projectsCount').textContent = projects.length;
+}
+
+// ─── LOGOUT ────────────────────────────────────────
+function logout() {
+  localStorage.removeItem('devai_user');
+  window.location.href = 'auth.html';
+}
+
+// ─── INIT ──────────────────────────────────────────
+updateSidebarCounts();
+showSection('users');
+</script>
+</body>
+</html>
